@@ -9,8 +9,24 @@
 
 int main(void)
 {
-    cl::Platform platform;
-    std::cout << "Hello World!\n"; 
+    //Make sure we get platform
+    std::vector<cl::Platform> platforms;
+    cl::Platform::get(&platforms);
+    _ASSERT(platforms.size() > 0);
+
+    //Make sure we get device
+    cl::Platform platform = platforms.front();
+    std::vector<cl::Device> devices;
+    platform.getDevices(CL_DEVICE_TYPE_GPU, &devices);
+    _ASSERT(devices.size() > 0);
+
+    cl::Device device = devices.front();
+    std::string vendor = device.getInfo<CL_DEVICE_VENDOR>();
+    std::string version = device.getInfo<CL_DEVICE_VERSION>();
+
+    std::cout << "Vendor: " << vendor <<std::endl;
+    std::cout << "Version: " << version << std::endl;
+
     system("pause");
     return 0;
 }
