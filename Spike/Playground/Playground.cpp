@@ -1,12 +1,9 @@
-// Playground.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
-
 #include <iostream>
 
 #define CL_USE_DEPRECATED_OPENCL_2_0_APIS
 
 #include <CL/cl.hpp>
-
+#include <fstream>
 int main(void)
 {
     //Make sure we get platform
@@ -26,18 +23,24 @@ int main(void)
 
     std::cout << "Vendor: " << vendor <<std::endl;
     std::cout << "Version: " << version << std::endl;
+    
+    std::ifstream helloWorldFile("opencl\\HelloWorld.cl");
+    std::string src(std::istreambuf_iterator<char>(helloWorldFile), (std::istreambuf_iterator<char>()));
+    cl::Program::Sources sources(1, std::make_pair(src.c_str(), src.length() + 1));
+    
+    cl::Context context(device);
+    cl::Program program(context, sources);
+    cl_int error = program.build("-cl-std=CL1.2");
+    char buf[12];
+    cl::Buffer memBuf(context, CL_MEM_WRITE_ONLY | CL_MEM_HOST_READ_ONLY, sizeof(buf));
+    cl::Kernel kernel(program, "HelloWorld", &error);
+    kernel.setArg(0, memBuf);
 
+    cl::CommandQueue queue(context, device);
+    queue.enqueueTask(kernel);
+    queue.enqueueReadBuffer(memBuf, GL_TRUE, 0, sizeof(buf), buf);
+    
+    std::cout << buf <<std::endl;
     system("pause");
     return 0;
 }
-
-// Run program: Ctrl + F5 or Debug > Start Without Debugging menu
-// Debug program: F5 or Debug > Start Debugging menu
-
-// Tips for Getting Started: 
-//   1. Use the Solution Explorer window to add/manage files
-//   2. Use the Team Explorer window to connect to source control
-//   3. Use the Output window to see build output and other messages
-//   4. Use the Error List window to view errors
-//   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
-//   6. In the future, to open this project again, go to File > Open > Project and select the .sln file
